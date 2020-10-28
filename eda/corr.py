@@ -38,63 +38,47 @@ def correlate_changes(amr_data, outdir):
         md_data = md_data.replace({'NumValue':{'-':'nan'}})
         points = np.array(md_data['NumValue'], dtype='float32')
         points = points[~np.isnan(points)]
-        print(md,points.shape[0])
-        continue
+        #print(md,points.shape[0])
+        fig,ax = plt.subplots(figsize=(12/2.54, 9/2.54))
         for i in range(len(regions)):
-            fig,ax = plt.subplots(figsize=(6/2.54, 6/2.54))
+
             region1 = regions[i]
             md_data_1 = md_data[md_data['RegionName']==region1]
-            max_corr = 0
-            min_corr = 0
+            x = np.array(md_data_1['NumValue'],dtype='float32')
+            y=md_data_1['Time']
 
-            for j in range(len(regions)):
-                if i == j:
-                    continue
-                region2 = regions[j] #Comparison region
-                md_data_2 = md_data[md_data['RegionName']==region2]
-                #Join on year
-                merge = pd.merge(md_data_1,md_data_2,on='Time',how='left')
-                y = np.array(merge['NumValue_x'],dtype='float32')
-                x = np.array(merge['NumValue_y'],dtype='float32')
-                #Remove y nans
-                x = x[~np.isnan(y)]
-                y = y[~np.isnan(y)]
-                #Remove x nans
-                y = y[~np.isnan(x)]
-                x = x[~np.isnan(x)]
+            #Fix nans
+            for xi in range(len(x)):
 
-                #Correlate
-                cs = []
-                ps = []
-                if len(x)-5<1:
-                    continue
-                for s in range(len(x)-5):
-                    if s == 0:
-                        R, p = pearsonr(x,y)
+                if np.isnan(x[xi])==True: #If nan
+                    if xi>0:
+                        if xi == len(x)-1:
+                            x = x[:-1]
+                            y = y[:-1]
+                        else:
+                            x[xi]=(x[xi-1]+x[xi+1])/2
                     else:
-                        R, p = pearsonr(x[:-s],y[s:])
-                    cs.append(R)
-                    ps.append(p)
-                #Save max and min corr
-                if max(cs)>max_corr:
-                    max_cs = cs
-                    max_corr = max(cs)
-                    max_region = region2
-                if min(cs)<min_corr:
-                    min_cs = cs
-                    min_corr = min(cs)
-                    min_region = region2
+                        x[xi]=x[xi+1]
+
+            #Smooth
+            x_smoothed = np.zeros(len(x))
+            step = 1
+            for xi in range(len(x)-step):
+                x_smoothed[xi]=np.average(x[xi:xi+step])
+            #Set final
+            x_smoothed[xi+1:]=x_smoothed[xi]
+
             #Plot
-            plt.plot(np.arange(len(max_cs)),max_cs,label=max_region)
-            plt.plot(np.arange(len(min_cs)),min_cs,label=min_region)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            plt.title(region1)
-            plt.legend()
-            plt.xlabel('Negativ shift (years)')
-            plt.ylabel('Pearson R')
-            plt.tight_layout()
-            plt.savefig(outdir+'combo1/'+region1+'.png',format='png', dpi=300)
+            plt.plot(y,x,color='mediumseagreen',alpha=0.5,linewidth=1)
+            #plt.plot(y,x_smoothed,color='b',alpha=0.5,linewidth=1)
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        plt.title(md)
+        plt.ylabel('% R')
+        plt.tight_layout()
+        plt.savefig(outdir+md+'.png',format='png', dpi=300)
+        plt.close()
+        print(md+'.png')
     pdb.set_trace()
 
 
