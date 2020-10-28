@@ -32,11 +32,14 @@ def correlate_changes(amr_data, outdir):
 
     #md = 'Escherichia coli|Combined resistance (third-generation cephalosporin, fluoroquinolones and aminoglycoside)'
 
-    for md in ['Acinetobacter spp.|Aminoglycosides']:
+    for md in microbe_drug:             #['Acinetobacter spp.|Aminoglycosides']:
         md_data = res_data[res_data['Population']==md]
         #Replace '-'
         md_data = md_data.replace({'NumValue':{'-':'nan'}})
-
+        points = np.array(md_data['NumValue'], dtype='float32')
+        points = points[~np.isnan(points)]
+        print(md,points.shape[0])
+        continue
         for i in range(len(regions)):
             fig,ax = plt.subplots(figsize=(6/2.54, 6/2.54))
             region1 = regions[i]
@@ -63,7 +66,7 @@ def correlate_changes(amr_data, outdir):
                 #Correlate
                 cs = []
                 ps = []
-                if len(x)-3<1:
+                if len(x)-5<1:
                     continue
                 for s in range(len(x)-5):
                     if s == 0:
