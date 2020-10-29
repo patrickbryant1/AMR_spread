@@ -52,10 +52,10 @@ def apply_bayes(amr_data, outdir):
             if len(r)<1:#If no data
                 resistance_matrix[i,j]=-1
                 continue
-            if max(r)>1:
+            if max(r)>1: #Reach 1 %
                 above_i = np.where(r>1)[0][0]
                 resistance_matrix[i,j]=y[above_i]
-            else:
+            else: #Never reached 1 % - will be represented with zeros
                 continue
 
     #Go through all countries and calculate
@@ -75,13 +75,19 @@ def apply_bayes(amr_data, outdir):
         missing_i = np.where(region_i_data!=-1)[0]
         for j in range(len(regions)):
             region_j_data = resistance_matrix[:,j]
+            #Missing data
+            missing_j = np.where(region_j_data[missing_i]!=-1)[0]
             #Get the year difference in reaching 1 %
             #If >1 % resistance is reached in region j first, this is positive
             ij_diff = region_i_data-region_j_data
             #Get only non-missing data
             ij_diff = ij_diff[missing_i]
+            ij_diff = ij_diff[missing_j]
             #Calc prob
             p_b_a = (len(np.where(ij_diff>0)[0])/len(ij_diff))
+            if i ==8:
+                print(ij_diff, p_b_a)
+                pdb.set_trace()
             p_a = above_1_percent[i]
             p_b = above_1_percent[j]
             #P(A|B)=P(B|A)P(A)/P(B)
@@ -91,7 +97,11 @@ def apply_bayes(amr_data, outdir):
     for i in range(len(regions)):
         fig,ax = plt.subplots(figsize=(12/2.54, 9/2.54))
         plt.bar(np.arange(len(regions)),already_above[i,:])
+        plt.ylim([0,1])
         plt.title(regions[i] + ' ' + str(i))
+        plt.xlabel('Country')
+        plt.ylabel('Prob.')
+        plt.tight_layout()
         plt.savefig(outdir+str(i)+'.png',format='png',dpi=300)
         plt.close()
 
