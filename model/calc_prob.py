@@ -34,7 +34,8 @@ def apply_bayes(amr_data, outdir):
 
     #Get the year each country reached 1 % R, write 0 if not, -1 if no data
     #Need to store when it is not possible to be before also by recording
-    #the starting year for all mds
+    #the starting year for all mds. If this is not adjusted for the probabilities
+    #will be lowered. Put -1 there.
     resistance_matrix = np.zeros((len(microbe_drug),len(regions)),dtype='int32')
     for i in range(len(microbe_drug)):
         md_data = res_data[res_data['Population']==microbe_drug[i]]
@@ -85,9 +86,6 @@ def apply_bayes(amr_data, outdir):
             ij_diff = ij_diff[missing_j]
             #Calc prob
             p_b_a = (len(np.where(ij_diff>0)[0])/len(ij_diff))
-            if i ==8:
-                print(ij_diff, p_b_a)
-                pdb.set_trace()
             p_a = above_1_percent[i]
             p_b = above_1_percent[j]
             #P(A|B)=P(B|A)P(A)/P(B)
@@ -108,8 +106,22 @@ def apply_bayes(amr_data, outdir):
 
 
 
-    pdb.set_trace()
+    return already_above
 
+def viterbi(matrix):
+    '''Calculate the most probable path through the matrix using the Viterbi algorithm.
+    The i rows represent the regions and the j columns the probabilities that the resistance
+    would be spread from each region j to region i (item [i,j])
+    '''
+
+    #All regions
+    for i in range(matrix.shape[0]-1):
+        #Need to be able to start in all possible countries
+        prob = np.zeros(matrix.shape[1])
+        for j in range(matrix.shape[1]):
+            prob[j] = matrix[i,j]*matrix[i+1,j]
+
+        pdb.set_trace()
 #####MAIN#####
 plt.rcParams.update({'font.size': 6})
 args = parser.parse_args()
@@ -117,4 +129,12 @@ amr_data = pd.read_csv(args.csv[0])
 #'HealthTopic', 'Population', 'Indicator', 'Unit', 'Time', 'RegionCode','RegionName', 'NumValue'
 outdir = args.outdir[0]
 
-apply_bayes(amr_data, outdir)
+#Get the transition matrix (prob of spread from all countries to all countries)
+try:
+    matrix = np.load(outdir+'matrix.npy', allow_pickle=True)
+except:
+    matrix = apply_bayes(amr_data, outdir)
+    np.save(outdir+'matrix.npy', matrix)
+
+#Viterbi
+viterbi(matrix)
