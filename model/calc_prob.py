@@ -21,74 +21,64 @@ parser.add_argument('--outdir', nargs=1, type= str,
                   default=sys.stdin, help = 'Path to output directory. Include /in end')
 
 #####FUNCTIONS#####
-def correlate_changes(amr_data, outdir):
-    '''Correlate the change in country i with changes in countries i+1,..,n
-    x years earlier, where x=0,1
+def apply_bayes(amr_data, outdir):
+    '''
+    1. Get the year each country reached 1 % R for
+    2. Calculate the Bayesian probabilities for spread of R coming from each country
+    to all countries.
     '''
     #Select the resistance data
     res_data = amr_data[amr_data['Indicator']=='R - resistant isolates, percentage  ']
-    years = np.sort(res_data['Time'].unique())
     microbe_drug = res_data['Population'].unique() #30 in total
     regions = res_data['RegionName'].unique() #30 in total
 
-    #md = 'Escherichia coli|Combined resistance (third-generation cephalosporin, fluoroquinolones and aminoglycoside)'
-
-    for md in microbe_drug:             #['Acinetobacter spp.|Aminoglycosides']:
-        md_data = res_data[res_data['Population']==md]
+    #Get the year each country reached 1 % R, write 0 if not, -1 if no data
+    resistance_matrix = np.zeros((len(microbe_drug),len(regions)),dtype='int32')
+    for i in range(len(microbe_drug)):
+        md_data = res_data[res_data['Population']==microbe_drug[i]]
         #Replace '-'
         md_data = md_data.replace({'NumValue':{'-':'nan'}})
-        points = np.array(md_data['NumValue'], dtype='float32')
-        points = points[~np.isnan(points)]
-        #print(md,points.shape[0])
-        fig,ax = plt.subplots(figsize=(12/2.54, 9/2.54))
-        for i in range(len(regions)):
+        for j in range(len(regions)):
+            md_region_data = md_data[md_data['RegionName']==regions[j]]
+            #Get year for which the resistance is above 1 %
+            r = np.array(md_region_data['NumValue'],dtype='float32')
+            excli = np.isnan(r)
+            y = np.array(md_region_data['Time'])
+            #Remove NaNs
+            r = r[~excli]
+            y = y[~excli]
+            if len(r)<1:#If no data
+                resistance_matrix[i,j]=-1
+                continue
+            if max(r)>1:
+                above_i = np.where(r>1)[0][0]
+                resistance_matrix[i,j]=y[above_i]
+            else:
+                continue
 
-            region1 = regions[i]
-            md_data_1 = md_data[md_data['RegionName']==region1]
-            x = np.array(md_data_1['NumValue'],dtype='float32')
-            y=md_data_1['Time']
+    #Go through all countries and calculate
+    #P(A) = number of times country i is above 1 %/number of possible times
+    #P(B) = number of times country j is above 1 %/number of possible times
+    above_1_percent = np.zeros(len(regions))
+    for i in range(len(regions)):
+        region_data = resistance_matrix[:,i]
+        above_1_percent[i]=len(np.where(region_data>0)[0])/len(np.where(region_data!=-1)[0])
 
-            #Fix nans
-            for xi in range(len(x)):
+    #P(B|A)= number of times country j is already above 1 % when country i is above 1 %
+    #divided by the number of times country i is above 1 %
+    already_above = np.zeros((len(regions),len(regions)))
+    for i in range(len(regions)):
+        for j in range(len(regions)):
 
-                if np.isnan(x[xi])==True: #If nan
-                    if xi>0:
-                        if xi == len(x)-1:
-                            x = x[:-1]
-                            y = y[:-1]
-                        else:
-                            x[xi]=(x[xi-1]+x[xi+1])/2
-                    else:
-                        x[xi]=x[xi+1]
 
-            #Smooth
-            x_smoothed = np.zeros(len(x))
-            step = 1
-            for xi in range(len(x)-step):
-                x_smoothed[xi]=np.average(x[xi:xi+step])
-            #Set final
-            x_smoothed[xi+1:]=x_smoothed[xi]
 
-            #Plot
-            plt.plot(y,x,color='mediumseagreen',alpha=0.5,linewidth=1)
-            #plt.plot(y,x_smoothed,color='b',alpha=0.5,linewidth=1)
-        ax.spines['top'].set_visible(False)
-        ax.spines['right'].set_visible(False)
-        plt.title(md)
-        plt.ylabel('% R')
-        plt.tight_layout()
-        plt.savefig(outdir+md+'.png',format='png', dpi=300)
-        plt.close()
-        print(md+'.png')
     pdb.set_trace()
-
-
-    #'HealthTopic', 'Population', 'Indicator', 'Unit', 'Time', 'RegionCode','RegionName', 'NumValue'
 
 #####MAIN#####
 plt.rcParams.update({'font.size': 6})
 args = parser.parse_args()
 amr_data = pd.read_csv(args.csv[0])
+#'HealthTopic', 'Population', 'Indicator', 'Unit', 'Time', 'RegionCode','RegionName', 'NumValue'
 outdir = args.outdir[0]
 
-correlate_changes(amr_data, outdir)
+apply_bayes(amr_data, outdir)
