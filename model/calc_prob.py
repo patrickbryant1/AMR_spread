@@ -81,9 +81,19 @@ def apply_bayes(amr_data, outdir):
             #Get only non-missing data
             ij_diff = ij_diff[missing_i]
             #Calc prob
-            already_above[i,j]=len(np.where(ij_diff>0)[0])/len(ij_diff)
-        pdb.set_trace()
+            p_b_a = (len(np.where(ij_diff>0)[0])/len(ij_diff))
+            p_a = above_1_percent[i]
+            p_b = above_1_percent[j]
+            #P(A|B)=P(B|A)P(A)/P(B)
+            already_above[i,j]=p_b_a*p_a/p_b
 
+    #Visualize Bayesian prob
+    for i in range(len(regions)):
+        fig,ax = plt.subplots(figsize=(12/2.54, 9/2.54))
+        plt.bar(np.arange(len(regions)),already_above[i,:])
+        plt.title(regions[i] + ' ' + str(i))
+        plt.savefig(outdir+str(i)+'.png',format='png',dpi=300)
+        plt.close()
 
 
 
