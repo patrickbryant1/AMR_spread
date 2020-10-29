@@ -33,6 +33,8 @@ def apply_bayes(amr_data, outdir):
     regions = res_data['RegionName'].unique() #30 in total
 
     #Get the year each country reached 1 % R, write 0 if not, -1 if no data
+    #Need to store when it is not possible to be before also by recording
+    #the starting year for all mds
     resistance_matrix = np.zeros((len(microbe_drug),len(regions)),dtype='int32')
     for i in range(len(microbe_drug)):
         md_data = res_data[res_data['Population']==microbe_drug[i]]
@@ -68,7 +70,21 @@ def apply_bayes(amr_data, outdir):
     #divided by the number of times country i is above 1 %
     already_above = np.zeros((len(regions),len(regions)))
     for i in range(len(regions)):
+        region_i_data = resistance_matrix[:,i]
+        #Missing data
+        missing_i = np.where(region_i_data!=-1)[0]
         for j in range(len(regions)):
+            region_j_data = resistance_matrix[:,j]
+            #Get the year difference in reaching 1 %
+            #If >1 % resistance is reached in region j first, this is positive
+            ij_diff = region_i_data-region_j_data
+            #Get only non-missing data
+            ij_diff = ij_diff[missing_i]
+            #Calc prob
+            already_above[i,j]=len(np.where(ij_diff>0)[0])/len(ij_diff)
+        pdb.set_trace()
+
+
 
 
 
