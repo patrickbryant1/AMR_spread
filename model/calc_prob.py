@@ -121,7 +121,7 @@ def apply_bayes(amr_data, outdir):
 
     return already_above
 
-def graph_traversal(matrix, regions):
+def graph_traversal(matrix, regions, outdir):
     '''Traverse and vidualize the graph using networkx
     '''
     #For directed graphs, explicitly mention create_using=nx.DiGraph,
@@ -135,11 +135,50 @@ def graph_traversal(matrix, regions):
     for i in range(30):
         labels[i]=regions[i]
     #pos=nx.circular_layout(G)
+    fig,ax = plt.subplots(figsize=(10, 10))
     nx.draw_networkx_labels(G,pos=pos,labels=labels)
-    nx.draw_networkx_nodes(G, pos, with_labels=True)
-    nx.draw_networkx_edges(G, pos, width=edgewidth,)
-    plt.show()
+    nx.draw_networkx_nodes(G, pos, with_labels=True, node_size=10)
+    nx.draw_networkx_edges(G, pos, edge_color=edgewidth,line_width=1)
+    plt.savefig(outdir+'graph.png',format='png',dpi=300)
+    plt.close()
+
+
+def sort_prob(matrix, regions, outdir):
+    '''Look at the probabilities across all countries
+    '''
+    #Plot matrix
+    fig,ax = plt.subplots(figsize=(18/2.54, 18/2.54))
+    plt.imshow(matrix)
+    plt.xticks(ticks=np.arange(len(regions)),labels=regions,rotation='vertical')
+    plt.yticks(ticks=np.arange(len(regions)),labels=regions)
+    plt.xlabel('Influencing country')
+    plt.ylabel('Country being influenced')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.savefig(outdir+'matrix.png',format='png',dpi=300)
+    plt.close()
+
+    #Define df
+    df = pd.DataFrame()
+    for i in range(len(regions)):
+        df[regions[i]]=matrix[:,i]
+    #Rename row indeices
+    df.index = regions
+    fig,ax = plt.subplots(figsize=(18/2.54, 18/2.54))
+    sns.clustermap(df, cmap='viridis')
+    plt.tight_layout()
+    plt.savefig(outdir+'clustermap.png',format='png',dpi=300)
+    plt.close()
     pdb.set_trace()
+    most_prob_order = np.argsort(from_country)[::-1]
+    #Get probability that any other country will get R from each country
+    prob_from_country = from_country[most_prob_order]/30
+    to_country = np.sum(matrix,axis=1)
+
+
+
+
+
 #####MAIN#####
 plt.rcParams.update({'font.size': 6})
 args = parser.parse_args()
@@ -153,8 +192,13 @@ try:
 except:
     matrix = apply_bayes(amr_data, outdir)
     np.save(outdir+'matrix.npy', matrix)
-
-#Graph
 res_data = amr_data[amr_data['Indicator']=='R - resistant isolates, percentage  ']
 regions = res_data['RegionName'].unique() #30 in total
-graph_traversal(matrix,np.array(regions))
+
+#Plot matrix
+
+#Go through probs
+sort_prob(matrix, regions, outdir)
+#Graph
+
+#graph_traversal(matrix,np.array(regions), outdir)
