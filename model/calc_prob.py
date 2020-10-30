@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import pearsonr
+import networkx as nx
+
 import pdb
 #Arguments for argparse module:
 parser = argparse.ArgumentParser(description = '''Calculate the probabilities for R coming from different
@@ -102,7 +103,7 @@ def apply_bayes(amr_data, outdir):
             p_b = above_1_percent[j]
             #P(A|B)=P(B|A)P(A)/P(B)
             already_above[i,j]=p_b_a*p_a/p_b
-    pdb.set_trace()
+
     #Visualize Bayesian prob
     for i in range(len(regions)):
         fig,ax = plt.subplots(figsize=(12/2.54, 9/2.54))
@@ -120,21 +121,25 @@ def apply_bayes(amr_data, outdir):
 
     return already_above
 
-def viterbi(matrix):
-    '''Calculate the most probable path through the matrix using the Viterbi algorithm.
-    The i rows represent the regions and the j columns the probabilities that the resistance
-    would be spread from each region j to region i (item [i,j])
+def graph_traversal(matrix, regions):
+    '''Traverse and vidualize the graph using networkx
     '''
-
-    #All regions
-    for i in range(matrix.shape[0]-1):
-        #Need to be able to start in all possible countries
-        prob = np.zeros(matrix.shape[1])
-        survivors = [] #Save the most probable paths
-        for j in range(matrix.shape[1]):
-            prob[j] = matrix[i,j]*matrix[i+1,j]
-
-        pdb.set_trace()
+    #For directed graphs, explicitly mention create_using=nx.DiGraph,
+    #and entry i,j of A corresponds to an edge from i to j.
+    G = nx.from_numpy_array(matrix,create_using=nx.DiGraph)
+    # use one of the edge properties to control line thickness
+    edgewidth = [ d['weight'] for (u,v,d) in G.edges(data=True)]
+    # layout
+    pos = nx.spring_layout(G, iterations=50)
+    labels = {}
+    for i in range(30):
+        labels[i]=regions[i]
+    #pos=nx.circular_layout(G)
+    nx.draw_networkx_labels(G,pos=pos,labels=labels)
+    nx.draw_networkx_nodes(G, pos, with_labels=True)
+    nx.draw_networkx_edges(G, pos, width=edgewidth,)
+    plt.show()
+    pdb.set_trace()
 #####MAIN#####
 plt.rcParams.update({'font.size': 6})
 args = parser.parse_args()
@@ -149,5 +154,7 @@ except:
     matrix = apply_bayes(amr_data, outdir)
     np.save(outdir+'matrix.npy', matrix)
 
-#Viterbi
-viterbi(matrix)
+#Graph
+res_data = amr_data[amr_data['Indicator']=='R - resistant isolates, percentage  ']
+regions = res_data['RegionName'].unique() #30 in total
+graph_traversal(matrix,np.array(regions))
