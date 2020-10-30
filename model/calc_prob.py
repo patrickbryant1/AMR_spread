@@ -35,12 +35,15 @@ def apply_bayes(amr_data, outdir):
     #Get the year each country reached 1 % R, write 0 if not, -1 if no data
     #Need to store when it is not possible to be before also by recording
     #the starting year for all mds. If this is not adjusted for the probabilities
-    #will be lowered. Put -1 there.
+    #will be lowered. The start years are therefore saved.
     resistance_matrix = np.zeros((len(microbe_drug),len(regions)),dtype='int32')
+    start_times = [] #First recording of data for each microbe_drug combination
     for i in range(len(microbe_drug)):
         md_data = res_data[res_data['Population']==microbe_drug[i]]
         #Replace '-'
         md_data = md_data.replace({'NumValue':{'-':'nan'}})
+        #Get min year
+        start_times.append(min(md_data['Time']))
         for j in range(len(regions)):
             md_region_data = md_data[md_data['RegionName']==regions[j]]
             #Get year for which the resistance is above 1 %
@@ -59,6 +62,8 @@ def apply_bayes(amr_data, outdir):
             else: #Never reached 1 % - will be represented with zeros
                 continue
 
+    #Convert start times to array
+    start_times = np.array(start_times)
     #Go through all countries and calculate
     #P(A) = number of times country i is above 1 %/number of possible times
     #P(B) = number of times country j is above 1 %/number of possible times
@@ -69,18 +74,25 @@ def apply_bayes(amr_data, outdir):
 
     #P(B|A)= number of times country j is already above 1 % when country i is above 1 %
     #divided by the number of times country i is above 1 %
+    #The number of times both countries are above 1 % at the start of recording are subtracted
     already_above = np.zeros((len(regions),len(regions)))
     for i in range(len(regions)):
         region_i_data = resistance_matrix[:,i]
+        #Look at the start times and the possibility of R 1 % being reached somewhere else
+        before_possible = region_i_data-start_times
         #Missing data
-        missing_i = np.where(region_i_data!=-1)[0]
+        missing_i = np.where(before_possible>0)[0]
+        print(regions[i],len(missing_i))
+
         for j in range(len(regions)):
             region_j_data = resistance_matrix[:,j]
             #Missing data
             missing_j = np.where(region_j_data[missing_i]!=-1)[0]
+
             #Get the year difference in reaching 1 %
             #If >1 % resistance is reached in region j first, this is positive
             ij_diff = region_i_data-region_j_data
+
             #Get only non-missing data
             ij_diff = ij_diff[missing_i]
             ij_diff = ij_diff[missing_j]
@@ -90,7 +102,7 @@ def apply_bayes(amr_data, outdir):
             p_b = above_1_percent[j]
             #P(A|B)=P(B|A)P(A)/P(B)
             already_above[i,j]=p_b_a*p_a/p_b
-
+    pdb.set_trace()
     #Visualize Bayesian prob
     for i in range(len(regions)):
         fig,ax = plt.subplots(figsize=(12/2.54, 9/2.54))
@@ -118,6 +130,7 @@ def viterbi(matrix):
     for i in range(matrix.shape[0]-1):
         #Need to be able to start in all possible countries
         prob = np.zeros(matrix.shape[1])
+        survivors = [] #Save the most probable paths
         for j in range(matrix.shape[1]):
             prob[j] = matrix[i,j]*matrix[i+1,j]
 
