@@ -51,13 +51,13 @@ def map_changes(amr_data, outdir):
     state_keys = {'USA: San Diego, CA':'CA', 'USA:GA':'GA', 'USA:VA':'VA', 'USA:TX':'TX',
        'USA:MD':'MD', 'USA:MI':'MI', 'USA:WY':'WY', 'USA: PA':'PA', 'USA: Menlo Park':'CA',
        'USA:IN':'IN', 'USA:MO':'MO', 'USA: IN':'IN', 'USA: CO':'CO', 'USA: MD':'MD', 'USA:FL':'FL',
-       'USA:NJ':'NJ', 'USA:SC';'SC', 'USA:NE':'NE', 'USA:WI':'WI', 'USA: NY';'NY', 'USA: NE':'NE',
+       'USA:NJ':'NJ', 'USA:SC':'SC', 'USA:NE':'NE', 'USA:WI':'WI', 'USA: NY':'NY', 'USA: NE':'NE',
        'USA: NJ':'NJ', 'USA:PA':'PA', 'USA: FL':'FL', 'USA:IA':'IA', 'USA:AZ':'AZ', 'USA:TN':'TN',
        'USA:KS':'KS', 'USA:RI':'RI', 'USA:KY':'KY', 'USA: OR':'OR', 'USA: WI':'WI', 'USA: CA':'CA',
        'USA: MN':'MN', 'USA: WV':'WV', 'USA: MO':'MO', 'USA: MI':'MI', 'USA: GA':'GA', 'USA: TN':'TN',
        'USA: ID':'ID', 'USA: TX':'TX', 'USA: OK':'OK', 'USA: UT':'UT', 'USA: VT':'VT', 'USA: IA':'IA',
        'USA: KS':'KS', 'USA: SC':'SC', 'USA: KY':'KY', 'USA:NC':'NC', 'USA:CA':'CA', 'USA: NC':'NC',
-       'USA:NY':'NY', 'USA:OH';'OH', 'USA: Rochester, NY':'NY',
+       'USA:NY':'NY', 'USA:OH':'OH', 'USA: Rochester, NY':'NY',
        'USA: Imperial County, CA':'CA', 'USA:IL':'IL', 'USA:SD':'SD', 'USA:ME':'MD', 'USA:WA':'WA',
        'USA: Cambridge, MA, MIT':'MA', 'USA:MA':'MA', 'USA:ID':'ID',
        'USA: University of Florida':'FL', 'USA:MN':'MN', 'USA:AR':'AR', 'USA:CO':'CO',
@@ -84,7 +84,7 @@ def map_changes(amr_data, outdir):
        'USA: Lower Kenai River, Alaska':'AK',
        'USA:Washington, DC':'DC', 'USA:AZ, Flagstaff':'AZ', 'USA: North Carolina':'NC',
        'USA: IL':'IL', 'USA: Alachua County, Florida':'FL', 'USA: Cambridge, MA':'MA',
-       'USA: ME''ME', 'USA: Massachusetts, Boston':'MA', 'USA: Los Angeles':'CA',
+       'USA: ME':'ME', 'USA: Massachusetts, Boston':'MA', 'USA: Los Angeles':'CA',
        'USA:Tennessee':'TN', 'USA: Minnesota':'MN', 'USA: Cambridge':'MA', 'USA: NH':'NH',
        'USA: Florida':'FL', 'USA: Alameda County, CA':'CA',
        'USA: San Joaquin County, CA':'CA', 'USA: Santa Clara County, CA':'CA',
@@ -97,22 +97,22 @@ def map_changes(amr_data, outdir):
        'USA: Oklahoma':'OK', 'USA: AL':'AL', 'USA: Walnut Creek':'CA',
        'USA: Gainesville, FL':'FL', 'USA:Gainesville, Florida':'FL', 'USA:HI':'HI',
        'USA: San Mateo County, CA':'CA', 'USA: Manteca County, CA':'CA',
-       'USA: Stockton, CA', 'USA: Orange County, CA',
-       'USA: Riverside County, CA', 'USA: Sacramento County, CA',
-       'USA: Pittsburgh, Pennsylvania', 'USA: Georgia', 'USA: Northeast',
-       'USA:Maine', 'USA: Kansas', 'USA: Massachusetts', 'USA: Michigan',
-       'USA: West', 'USA: Sacramento, CA', 'USA: Houston, TX',
-       'USA: Ipswich, MA', 'USA: UC Davis Medical Center',
-       'USA: UC Davis Medical Center, Davis, Ca', 'USA: AK',
-       'USA: Midwest', 'USA: Southeast', 'USA: MA', 'USA: Maywood, IL',
-       'USA:University of California at Los Angeles',
-       'USA: Oklahoma City, OK', 'USA: Iowa',
-       'USA: San Diego VA Medical Center', 'USA: Arkansas', 'USA: Oregon',
-       'USA: South Dakota', 'USA: CT', 'USA: Seattle, WA',
-       'USA: Pacific Northwest', 'USA:San Francisco',
-       'USA:Minneapolis, MN', 'USA:Sacramento CA', 'USA: San Francisco',
-       'USA:Michigan', 'USA:Maryland', 'USA: Nevada', 'USA: ND',
-       'USA: North Dakota', 'USA: Delaware', 'USA: New York City, NY',
+       'USA: Stockton, CA':'CA', 'USA: Orange County, CA':'CA',
+       'USA: Riverside County, CA':'CA', 'USA: Sacramento County, CA':'CA',
+       'USA: Pittsburgh, Pennsylvania':'PA', 'USA: Georgia':'GA',
+       'USA:Maine':'ME', 'USA: Kansas':'KS', 'USA: Massachusetts':'MA', 'USA: Michigan':'MI',
+       'USA: Sacramento, CA':'CA', 'USA: Houston, TX':'TX',
+       'USA: Ipswich, MA':'MA', 'USA: UC Davis Medical Center':'CA',
+       'USA: UC Davis Medical Center, Davis, Ca':'CA', 'USA: AK':'AK',
+       'USA: MA':'MA', 'USA: Maywood, IL':'IL',
+       'USA:University of California at Los Angeles':'CA',
+       'USA: Oklahoma City, OK':'OK', 'USA: Iowa':'IA',
+       'USA: San Diego VA Medical Center':'CA', 'USA: Arkansas':'AR', 'USA: Oregon':'OR',
+       'USA: South Dakota':'SD', 'USA: CT':'CT', 'USA: Seattle, WA':'WA',
+       'USA:San Francisco':'CA',
+       'USA:Minneapolis, MN':'MN', 'USA:Sacramento CA':'CA', 'USA: San Francisco':'CA',
+       'USA:Michigan':'MI', 'USA:Maryland':'MD', 'USA: Nevada':'NV', 'USA: ND':'ND',
+       'USA: North Dakota':'ND', 'USA: Delaware':'DE', 'USA: New York City, NY':'NY',
        'USA: Washington,Seattle':'WA', 'USA: Indiana':'IN', 'USA: Dallas, Texas':'TX',
        'USA: Alabama':'AL', 'USA: Maine':'ME', 'USA:California':'CA',
        'USA: Washington DC':'DC', 'USA: Burlington':'VT', 'USA:Seattle WA':'WA',
@@ -147,9 +147,20 @@ def map_changes(amr_data, outdir):
        'USA: Lafayette':'GA', 'USA:Utah':'UT', 'USA: Fort Sam, Houston':'TX',
        'USA: Curry County, Oregon':'OR', 'USA: Alaska, Anchorage mudflats':'AK'}
 
-    for loc in locations:
-        loc = loc.split(':')
-        pdb.set_trace()
+    states = []
+    for i in range(len(amr_data)):
+        row = amr_data.loc[i]
+        loc = row['Location']
+
+        try:
+            states.append(state_keys[loc])
+        except:
+            states.append('NA')
+            print(loc)
+
+    #Assign state
+    amr_data['State']=states
+    pdb.set_trace()
 
 
 
