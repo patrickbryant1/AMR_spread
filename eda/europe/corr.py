@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 import pdb
 #Arguments for argparse module:
-parser = argparse.ArgumentParser(description = '''Parse and analyze CATH data .''')
+parser = argparse.ArgumentParser(description = '''Parse and analyze AMR data .''')
 
 parser.add_argument('--csv', nargs=1, type= str,
                   default=sys.stdin, help = 'Path to ECDC csv with AMR.')
