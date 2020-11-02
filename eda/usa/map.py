@@ -148,21 +148,62 @@ def map_changes(amr_data, outdir):
        'USA: Curry County, Oregon':'OR', 'USA: Alaska, Anchorage mudflats':'AK'}
 
     states = []
+    blaec = []
     for i in range(len(amr_data)):
         row = amr_data.loc[i]
         loc = row['Location']
-
         try:
             states.append(state_keys[loc])
         except:
-            states.append('NA')
+            states.append('nan')
             print(loc)
+
+        amr = row['AMR genotypes core']
+        try:
+            amr = amr.split(',')
+        except:
+            blaec.append(0)
+            continue
+        blaec_found = False
+        for a in amr:
+            a = a.split('=')[0]
+            if a == 'blaEC':
+                blaec_found = True
+
+        if blaec_found==True:
+            blaec.append(1)
+        else:
+            blaec.append(0)
 
     #Assign state
     amr_data['State']=states
+    #Assign blaec
+    amr_data['blaec']=blaec
+
+    #Get only blaec
+    amr_data = amr_data[amr_data['blaec']==1]
+    #Get only those with state info
+    amr_data = amr_data[amr_data['State']!='nan']
+    #Get only clinical samples
+    
+    amr_data = amr_data.reset_index()
+
+    unique_states = amr_data['State'].unique()
+    si=0
+    for state in unique_states:
+        state_data = amr_data[amr_data['State']==state]
+        u_dates = state_data['Collection Date'].unique()
+        print(state, u_dates)
+        plt.scatter([si]*u_dates.shape[0],u_dates)
+        si+=1
+
+    plt.xticks(ticks=np.arange(len(unique_states)),labels=unique_states)
+    plt.title('Beta-lactamase resistance')
+    plt.xlabel('State')
+    plt.ylabel('Measurement time point')
+    plt.tight_layout()
+    plt.savefig(outdir+'betalactam_sampling.png', dpi=300, format='png')
     pdb.set_trace()
-
-
 
 
 #####MAIN#####
@@ -170,5 +211,9 @@ plt.rcParams.update({'font.size': 6})
 args = parser.parse_args()
 amr_data = pd.read_csv(args.tsv[0], sep='\t')
 outdir = args.outdir[0]
+
+amr_data = amr_data[amr_data['Collection Date']!='2017/2018']
+amr_data = amr_data.reset_index()
+amr_data['Collection Date']=pd.to_datetime(amr_data['Collection Date'])
 
 map_changes(amr_data, outdir)
